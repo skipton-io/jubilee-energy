@@ -33,3 +33,40 @@ Notes:
   test against.
 - If a ticket turns out not to be actionable in Webflow (DNS, Cloudflare, hosting headers),
   say so on the ticket and leave it out of In Review rather than closing it.
+
+## What the Webflow Data API can and cannot reach
+
+Established by working the audit backlog. Check here before promising a fix.
+
+**Reachable:**
+
+- Page `<title>` and meta description — `data_pages_tool > bulk_update_pages` (up to 100 at a time).
+  Pass `seo.title` *and* `seo.description` together; the object is replaced, not merged.
+- Per-page JSON-LD — `bulk_update_pages_schema_markup` (up to 25 at a time).
+- CMS item fields, including the `title-tag` and `meta-description` SEO fields that the Blog Post
+  and Product Category templates bind to — `data_cms_tool > update_collection_items`.
+  Partial `fieldData` is safe; omitted fields keep their values. Updates stage as drafts.
+- Site-wide head/footer custom code — `data_scripts_tool > set_site_freeform_code`. This is the
+  route for site-level CSS and JS fixes.
+
+**Not reachable — needs a human in the Designer or another system:**
+
+- **Canonical URL.** No canonical field exists on the page object at all. Page Settings → SEO only.
+- **Element markup and styles** — attributes such as `aria-hidden`, heading levels, alt text on
+  non-CMS images, class definitions, component structure.
+- **Response headers** (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) and
+  `/.well-known/*` paths. These sit with Cloudflare, which fronts the site.
+- **DNS and TLS**, including the apex domain. Cloudflare.
+
+## Gotchas
+
+- `set_site_freeform_code` **replaces the entire block**. Always `get_site_freeform_code` first
+  and re-send the existing content with your addition appended, or you will silently delete the
+  google-site-verification meta, the GA4 tag and the GTM container.
+- CMS collections carry long rich-text bodies, so a full `list_collection_items` easily exceeds
+  the tool output limit. The result is written to a file; parse it with python rather than
+  refetching in smaller batches.
+- The `Product Categories` collection has slug `products`, so `/products/<x>` pages are Product
+  *Category* items — not items of the separate `Products` collection.
+- Several CMS items are `isDraft: true` while still having a `lastPublished` date. Check the flag
+  before assuming an item is live.
