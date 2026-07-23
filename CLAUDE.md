@@ -52,6 +52,10 @@ Established by working the audit backlog. Check here before promising a fix.
 **Not reachable — needs a human in the Designer or another system:**
 
 - **Canonical URL.** No canonical field exists on the page object at all. Page Settings → SEO only.
+- **Page-level custom code.** `set_page_freeform_code` returns **HTTP 406** on this site.
+  `get_page_freeform_code` reads fine, and the site-level write works — the page-level write does
+  not. Anything living in a page's own head code (notably the homepage LocalBusiness JSON-LD) has
+  to be edited in the Designer.
 - **Element markup and styles** — attributes such as `aria-hidden`, heading levels, alt text on
   non-CMS images, class definitions, component structure.
 - **Response headers** (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) and
